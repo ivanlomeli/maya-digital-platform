@@ -1,0 +1,15 @@
+ D backend/business_migration_text.sql
+ D backend/business_tables_migration.sql
+ D backend/migrations/20250715160000_add_ical_uuid.sql
+ D backend/migrations/migrations/20250715150000_create_bookings_table.sql
+ D backend/package.json
+ D backend/seed.sql
+ D backend/src/page/AdminPage.js
+ D backend/src/page/ExperienciasPage.js
+ D backend/src/page/HotelesPage.js
+ D backend/src/page/RestaurantesPage.js
+ D migrations/20250715141205_create_auth_system_complete.sql
+?? _audit/
+?? backend/migrations/business_migration_text.sql
+?? backend/migrations/business_tables_migration.sql
+?? backend/migrations/seed.sql

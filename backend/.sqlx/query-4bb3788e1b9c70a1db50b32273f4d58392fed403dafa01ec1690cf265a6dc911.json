@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT id, business_id, image_url, image_type, display_order, created_at\n                FROM business_images \n                WHERE business_id = $1\n                ORDER BY display_order, id\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "business_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "image_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "display_order",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "4bb3788e1b9c70a1db50b32273f4d58392fed403dafa01ec1690cf265a6dc911"
+}

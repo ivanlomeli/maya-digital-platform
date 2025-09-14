@@ -148,10 +148,13 @@ async fn get_producto_by_id(path: web::Path<u32>) -> impl Responder {
 async fn health() -> impl Responder {
     HttpResponse::Ok().json(serde_json::json!({
         "message": "🚀 Servidor de Maya Digital funcionando correctamente",
+        "status": "healthy",
+        "timestamp": chrono::Utc::now(),
         "database": "connected",
         "auth": "enabled",
         "bookings": "available",
-        "businesses": "available"
+        "businesses": "available",
+        "version": "1.0.0"
     }))
 }
 
@@ -166,28 +169,61 @@ async fn main() -> std::io::Result<()> {
     // Conectar a la base de datos
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
-        .max_connections(5)
+        .max_connections(10) // ✅ Aumentar conexiones para mejor rendimiento
         .connect(&database_url)
         .await
         .expect("Failed to connect to Postgres");
 
-    println!("🚀 Servidor de Maya Digital iniciado en http://127.0.0.1:8080");
+    // ✅ Verificar conexión de BD
+    match sqlx::query("SELECT 1").fetch_one(&pool).await {
+        Ok(_) => println!("✅ Base de datos PostgreSQL conectada correctamente"),
+        Err(e) => {
+            eprintln!("❌ Error conectando a la base de datos: {}", e);
+            std::process::exit(1);
+        }
+    }
+
+    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let bind_address = format!("127.0.0.1:{}", port);
+
+    println!("🚀 Servidor de Maya Digital iniciado en http://{}", bind_address);
     println!("📊 Base de datos PostgreSQL conectada");
     println!("🔐 Sistema de autenticación habilitado");
     println!("📋 Sistema de reservas disponible");
     println!("🏢 Sistema de registro de negocios disponible");
 
     HttpServer::new(move || {
+        // ✅ CORS CORREGIDO - Más permisivo y robusto
         let cors = Cors::default()
             .allowed_origin("http://localhost:3000")
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-            .allowed_headers(vec!["Authorization", "Content-Type"])
+            .allowed_origin("http://127.0.0.1:3000")
+            .allowed_origin("https://localhost:3000") // Para HTTPS si lo usas
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+            .allowed_headers(vec![
+                "Authorization", 
+                "Content-Type", 
+                "Accept",
+                "Origin",
+                "User-Agent",
+                "X-Requested-With"
+            ])
+            .expose_headers(vec!["Content-Type", "Authorization"])
+            .supports_credentials() // ✅ Permitir cookies si las usas
             .max_age(3600);
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .wrap(cors)
             .wrap(Logger::default())
+            
+            // ✅ Ruta de health check mejorada
+            .service(health)
+            .route("/api/health", web::get().to(|| async {
+                HttpResponse::Ok().json(serde_json::json!({
+                    "message": "🚀 API de Maya Digital funcionando",
+                    "status": "healthy"
+                }))
+            }))
             
             // Rutas de autenticación
             .route("/api/auth/register", web::post().to(register))
@@ -231,14 +267,27 @@ async fn main() -> std::io::Result<()> {
             .route("/api/bookings/{id}/cancel", web::put().to(cancel_booking))
 
             // Rutas públicas existentes (compatibilidad)
-            .service(health)
             .route("/api/hoteles", web::get().to(get_all_approved_hotels))
             .service(get_restaurantes)
             .service(get_experiencias)
             .service(get_productos)
             .service(get_producto_by_id)
+            
+            // ✅ Ruta catch-all para debug (OPCIONAL)
+            .default_service(web::route().to(|| async {
+                HttpResponse::NotFound().json(serde_json::json!({
+                    "error": "Endpoint no encontrado",
+                    "available_endpoints": [
+                        "POST /api/auth/register",
+                        "POST /api/auth/login", 
+                        "GET /api/auth/me",
+                        "GET /health",
+                        "GET /api/health"
+                    ]
+                }))
+            }))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(bind_address)?
     .run()
     .await
 }

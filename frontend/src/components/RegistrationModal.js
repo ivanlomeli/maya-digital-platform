@@ -1,4 +1,4 @@
-// src/components/RegistrationModal.js
+// src/components/RegistrationModal.js - VERSIÓN CORREGIDA
 
 import { useState } from 'react';
 
@@ -26,16 +26,45 @@ export default function RegistrationModal({ onRegister, onLogin }) {
         setIsSubmitting(true);
         setError('');
 
+        // ✅ Validación frontend básica
+        if (!formData.email || !formData.password) {
+            setError('Email y contraseña son requeridos');
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (!isLogin && (!formData.first_name || !formData.last_name)) {
+            setError('Nombre y apellido son requeridos para registro');
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (!isLogin && formData.password.length < 8) {
+            setError('La contraseña debe tener al menos 8 caracteres');
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
             const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
             const payload = isLogin 
-                ? { email: formData.email, password: formData.password }
-                : { ...formData, role: 'Customer' };
+                ? { 
+                    email: formData.email.trim(), 
+                    password: formData.password 
+                }
+                : { 
+                    email: formData.email.trim(),
+                    password: formData.password,
+                    first_name: formData.first_name.trim(),
+                    last_name: formData.last_name.trim(),
+                    phone: formData.phone?.trim() || null,
+                    role: 'Customer' 
+                };
 
-            // --- CAMBIO PRINCIPAL AQUÍ ---
-            // Se eliminó 'http://127.0.0.1:8080' para usar una ruta relativa.
-            // Ahora Nginx redirigirá la llamada correctamente en el servidor.
-            const response = await fetch(endpoint, {
+            console.log('📤 Enviando solicitud:', { endpoint, payload: { ...payload, password: '[OCULTA]' } });
+
+            // ✅ SOLUCIÓN: URL DIRECTA AL BACKEND (más confiable)
+            const response = await fetch(`http://localhost:8080${endpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -43,20 +72,42 @@ export default function RegistrationModal({ onRegister, onLogin }) {
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
+            console.log('📥 Respuesta recibida:', response.status, response.statusText);
+
+            // ✅ Verificar si la respuesta es JSON válida
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                const textResponse = await response.text();
+                console.error('❌ Respuesta no es JSON:', textResponse);
+                throw new Error('Respuesta del servidor inválida');
+            }
 
             if (response.ok) {
+                console.log('✅ Operación exitosa:', result);
                 if (isLogin) {
                     onLogin(result);
                 } else {
                     onRegister(result);
                 }
+                
+                // ✅ Limpiar formulario en caso de éxito
+                setFormData({
+                    email: '',
+                    password: '',
+                    first_name: '',
+                    last_name: '',
+                    phone: ''
+                });
             } else {
+                console.error('❌ Error del servidor:', result);
                 setError(result.error || 'Error en la autenticación');
             }
         } catch (error) {
-            console.error('Error:', error);
-            setError('Error de conexión. Intenta nuevamente.');
+            console.error('❌ Error de conexión:', error);
+            setError('Error de conexión. Verifica que el servidor esté funcionando.');
         } finally {
             setIsSubmitting(false);
         }
@@ -78,7 +129,7 @@ export default function RegistrationModal({ onRegister, onLogin }) {
 
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    {error}
+                    <strong>Error:</strong> {error}
                 </div>
             )}
 
@@ -88,7 +139,7 @@ export default function RegistrationModal({ onRegister, onLogin }) {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-gray-700 font-semibold mb-2">
-                                    Nombre
+                                    Nombre *
                                 </label>
                                 <input
                                     type="text"
@@ -96,12 +147,13 @@ export default function RegistrationModal({ onRegister, onLogin }) {
                                     value={formData.first_name}
                                     onChange={handleInputChange}
                                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    required={!isLogin}
+                                    disabled={isSubmitting}
                                 />
                             </div>
                             <div>
                                 <label className="block text-gray-700 font-semibold mb-2">
-                                    Apellido
+                                    Apellido *
                                 </label>
                                 <input
                                     type="text"
@@ -109,14 +161,15 @@ export default function RegistrationModal({ onRegister, onLogin }) {
                                     value={formData.last_name}
                                     onChange={handleInputChange}
                                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    required={!isLogin}
+                                    disabled={isSubmitting}
                                 />
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-gray-700 font-semibold mb-2">
-                                Teléfono (opcional)
+                                Teléfono
                             </label>
                             <input
                                 type="tel"
@@ -124,7 +177,8 @@ export default function RegistrationModal({ onRegister, onLogin }) {
                                 value={formData.phone}
                                 onChange={handleInputChange}
                                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                placeholder="+52 999 123 4567"
+                                disabled={isSubmitting}
+                                placeholder="Opcional"
                             />
                         </div>
                     </>
@@ -132,7 +186,7 @@ export default function RegistrationModal({ onRegister, onLogin }) {
 
                 <div>
                     <label className="block text-gray-700 font-semibold mb-2">
-                        Email
+                        Email *
                     </label>
                     <input
                         type="email"
@@ -141,12 +195,13 @@ export default function RegistrationModal({ onRegister, onLogin }) {
                         onChange={handleInputChange}
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                         required
+                        disabled={isSubmitting}
                     />
                 </div>
 
                 <div>
                     <label className="block text-gray-700 font-semibold mb-2">
-                        Contraseña
+                        Contraseña *
                     </label>
                     <input
                         type="password"
@@ -155,38 +210,54 @@ export default function RegistrationModal({ onRegister, onLogin }) {
                         onChange={handleInputChange}
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                         required
-                        minLength="8"
+                        disabled={isSubmitting}
+                        minLength={isLogin ? undefined : 8}
                     />
+                    {!isLogin && (
+                        <p className="text-sm text-gray-500 mt-1">
+                            Mínimo 8 caracteres
+                        </p>
+                    )}
                 </div>
 
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`w-full py-3 px-4 rounded-lg font-bold transition-colors ${
-                        isSubmitting
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition duration-200 ${
+                        isSubmitting 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-blue-500 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500'
                     }`}
                 >
                     {isSubmitting 
-                        ? 'Procesando...' 
-                        : isLogin 
-                            ? 'Iniciar Sesión' 
-                            : 'Crear Cuenta'
+                        ? (isLogin ? 'Iniciando...' : 'Registrando...') 
+                        : (isLogin ? 'Iniciar Sesión' : 'Crear Cuenta')
                     }
                 </button>
             </form>
 
-            <div className="mt-6 text-center">
-                <p className="text-gray-600">
-                    {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
-                    <button
-                        onClick={() => setIsLogin(!isLogin)}
-                        className="text-blue-600 hover:text-blue-800 font-semibold ml-2"
-                    >
-                        {isLogin ? 'Crear cuenta' : 'Iniciar sesión'}
-                    </button>
-                </p>
+            <div className="text-center mt-6">
+                <button
+                    type="button"
+                    onClick={() => {
+                        setIsLogin(!isLogin);
+                        setError('');
+                        setFormData({
+                            email: '',
+                            password: '',
+                            first_name: '',
+                            last_name: '',
+                            phone: ''
+                        });
+                    }}
+                    className="text-blue-500 hover:text-blue-600 underline"
+                    disabled={isSubmitting}
+                >
+                    {isLogin 
+                        ? '¿No tienes cuenta? Crear una' 
+                        : '¿Ya tienes cuenta? Iniciar sesión'
+                    }
+                </button>
             </div>
         </div>
     );

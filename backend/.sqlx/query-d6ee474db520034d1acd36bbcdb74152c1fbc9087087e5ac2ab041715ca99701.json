@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT b.id, b.check_in, b.check_out, b.guests,\n               b.total_price::numeric::float8 as \"total_price!\",\n               b.status as \"status!\", b.created_at as \"created_at!\",\n               u.first_name || ' ' || u.last_name as \"customer_name!\",\n               u.email as \"customer_email!\"\n        FROM bookings b JOIN users u ON b.user_id = u.id\n        WHERE b.hotel_id = $1 ORDER BY b.check_in DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "check_in",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 2,
+        "name": "check_out",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 3,
+        "name": "guests",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_price!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "status!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "customer_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "customer_email!",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "d6ee474db520034d1acd36bbcdb74152c1fbc9087087e5ac2ab041715ca99701"
+}

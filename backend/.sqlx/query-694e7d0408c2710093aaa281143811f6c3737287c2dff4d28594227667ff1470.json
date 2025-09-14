@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE hotels \n        SET status = 'approved', \n            approved_by = $1, \n            approved_at = CURRENT_TIMESTAMP\n        WHERE id = $2 AND status = 'pending'\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "694e7d0408c2710093aaa281143811f6c3737287c2dff4d28594227667ff1470"
+}

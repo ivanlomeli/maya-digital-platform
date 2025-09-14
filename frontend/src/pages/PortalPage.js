@@ -1,18 +1,18 @@
-// pages/PortalPage.js - VERSIÓN CORREGIDA (HOOKS ANTES DE RETURNS)
+// pages/PortalPage.js - VERSIÓN CORREGIDA CON MANEJO SEGURO DE ARRAYS
 
 import React, { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 
 function PortalPage({ userData, isLoggedIn }) {
-    // 🔥 TODOS LOS HOOKS DEBEN IR AL INICIO ANTES DE CUALQUIER RETURN
-    const [hotels, setHotels] = useState([]);
-    const [businesses, setBusinesses] = useState([]); // 🔥 NUEVO: Para restaurantes
-    const [bookings, setBookings] = useState([]);
+    // ✅ TODOS LOS HOOKS AL INICIO - INICIALIZAR COMO ARRAYS VACÍOS
+    const [hotels, setHotels] = useState([]); // ✅ Siempre array
+    const [businesses, setBusinesses] = useState([]); // ✅ Siempre array
+    const [bookings, setBookings] = useState([]); // ✅ Siempre array
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
     const [error, setError] = useState(null);
 
-    // 🔥 FUNCIÓN PARA CARGAR HOTELES
+    // ✅ FUNCIÓN PARA CARGAR HOTELES CON MANEJO SEGURO
     const fetchHotels = async () => {
         if (!userData || (userData.role !== 'HotelOwner' && userData.role !== 'Admin')) return;
         
@@ -27,18 +27,31 @@ function PortalPage({ userData, isLoggedIn }) {
 
             if (response.ok) {
                 const data = await response.json();
-                setHotels(data);
-                console.log('✅ Hoteles cargados:', data);
+                console.log('📥 Respuesta de hoteles:', data);
+                
+                // ✅ MANEJO SEGURO: Asegurarse de que sea array
+                if (data && data.hotels && Array.isArray(data.hotels)) {
+                    setHotels(data.hotels);
+                } else if (Array.isArray(data)) {
+                    setHotels(data);
+                } else {
+                    console.warn('Respuesta de hoteles no es array:', data);
+                    setHotels([]); // Default a array vacío
+                }
+                console.log('✅ Hoteles cargados correctamente');
             } else {
                 console.error('Error cargando hoteles:', response.status);
+                setError('Error al cargar hoteles');
+                setHotels([]); // ✅ Asegurar array vacío en error
             }
         } catch (error) {
             console.error('Error cargando hoteles:', error);
             setError('Error al cargar hoteles');
+            setHotels([]); // ✅ Asegurar array vacío en error
         }
     };
 
-    // 🔥 FUNCIÓN PARA CARGAR NEGOCIOS/RESTAURANTES
+    // ✅ FUNCIÓN PARA CARGAR NEGOCIOS CON MANEJO SEGURO
     const fetchBusinesses = async () => {
         if (!userData || (userData.role !== 'BusinessOwner' && userData.role !== 'Admin')) return;
         
@@ -53,21 +66,32 @@ function PortalPage({ userData, isLoggedIn }) {
 
             if (response.ok) {
                 const data = await response.json();
-                setBusinesses(data);
-                console.log('✅ Negocios cargados:', data);
+                console.log('📥 Respuesta de negocios:', data);
+                
+                // ✅ MANEJO SEGURO: Asegurarse de que sea array
+                if (data && data.businesses && Array.isArray(data.businesses)) {
+                    setBusinesses(data.businesses);
+                } else if (Array.isArray(data)) {
+                    setBusinesses(data);
+                } else {
+                    console.warn('Respuesta de negocios no es array:', data);
+                    setBusinesses([]); // Default a array vacío
+                }
+                console.log('✅ Negocios cargados correctamente');
             } else {
                 console.error('Error cargando negocios:', response.status);
+                setError('Error al cargar negocios');
+                setBusinesses([]); // ✅ Asegurar array vacío en error
             }
         } catch (error) {
             console.error('Error cargando negocios:', error);
             setError('Error al cargar negocios');
+            setBusinesses([]); // ✅ Asegurar array vacío en error
         }
     };
 
-    // 🔥 FUNCIÓN PARA CARGAR RESERVAS
+    // ✅ FUNCIÓN PARA CARGAR BOOKINGS CON MANEJO SEGURO
     const fetchBookings = async () => {
-        if (!userData) return;
-        
         try {
             const token = localStorage.getItem('auth_token');
             const response = await fetch('http://localhost:8080/api/bookings/my-bookings', {
@@ -79,42 +103,53 @@ function PortalPage({ userData, isLoggedIn }) {
 
             if (response.ok) {
                 const data = await response.json();
-                setBookings(data);
-                console.log('✅ Reservas cargadas:', data);
+                console.log('📥 Respuesta de bookings:', data);
+                
+                // ✅ MANEJO SEGURO: Asegurarse de que sea array
+                if (data && data.bookings && Array.isArray(data.bookings)) {
+                    setBookings(data.bookings);
+                } else if (Array.isArray(data)) {
+                    setBookings(data);
+                } else {
+                    console.warn('Respuesta de bookings no es array:', data);
+                    setBookings([]); // Default a array vacío
+                }
+                console.log('✅ Bookings cargados correctamente');
+            } else {
+                console.error('Error cargando bookings:', response.status);
+                setBookings([]); // ✅ Asegurar array vacío en error
             }
         } catch (error) {
-            console.error('Error cargando reservas:', error);
+            console.error('Error cargando bookings:', error);
+            setBookings([]); // ✅ Asegurar array vacío en error
         }
     };
 
-    // 🔥 HOOK useEffect DEBE IR DESPUÉS DE LAS FUNCIONES PERO ANTES DE LOS RETURNS
+    // ✅ EFECTO PARA CARGAR DATOS
     useEffect(() => {
-        // Solo ejecutar si tenemos userData válido
-        if (!userData) return;
-
-        const loadData = async () => {
-            setLoading(true);
-            setError(null);
+        if (userData && isLoggedIn) {
+            const loadData = async () => {
+                setLoading(true);
+                setError(null);
+                
+                await Promise.all([
+                    fetchHotels(),
+                    fetchBusinesses(),
+                    fetchBookings()
+                ]);
+                
+                setLoading(false);
+            };
             
-            await Promise.all([
-                fetchHotels(),
-                fetchBusinesses(), // 🔥 NUEVO
-                fetchBookings()
-            ]);
-            
-            setLoading(false);
-        };
+            loadData();
+        }
+    }, [userData, isLoggedIn]);
 
-        loadData();
-    }, [userData]); // Dependencia correcta
-
-    // 🔥 AHORA SÍ PODEMOS USAR RETURNS CONDICIONALES (DESPUÉS DE TODOS LOS HOOKS)
-    // Verificar autenticación
+    // ✅ RETURNS CONDICIONALES DESPUÉS DE TODOS LOS HOOKS
     if (!isLoggedIn || !userData) {
         return <Navigate to="/" replace />;
     }
 
-    // Verificar que sea hotel owner o business owner
     const isHotelOwner = userData.role === 'HotelOwner';
     const isBusinessOwner = userData.role === 'BusinessOwner';
     const canAccessPortal = isHotelOwner || isBusinessOwner || userData.role === 'Admin';
@@ -133,7 +168,7 @@ function PortalPage({ userData, isLoggedIn }) {
         );
     }
 
-    // 🔥 DETERMINAR QUE TABS MOSTRAR SEGÚN EL ROL
+    // ✅ DETERMINAR TABS SEGÚN EL ROL
     const getAvailableTabs = () => {
         const tabs = [{ id: 'overview', name: 'Resumen', icon: '📊' }];
         
@@ -158,41 +193,24 @@ function PortalPage({ userData, isLoggedIn }) {
                     <div className="flex justify-between items-center py-6">
                         <div>
                             <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-                                Portal de {isHotelOwner ? 'Hoteles' : 'Restaurantes'}
+                                Portal de {isHotelOwner ? 'Hoteles' : isBusinessOwner ? 'Restaurantes' : 'Administración'}
                             </h1>
                             <p className="text-gray-600">
                                 Bienvenido, {userData.first_name} {userData.last_name}
                             </p>
                         </div>
-                        
-                        {/* Botón para agregar nuevo */}
-                        <div className="flex space-x-4">
-                            {isHotelOwner && (
-                                <Link
-                                    to="/portal/nuevo-hotel"
-                                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                                >
-                                    + Nuevo Hotel
-                                </Link>
-                            )}
-                            {isBusinessOwner && (
-                                <Link
-                                    to="/registro-restaurante"
-                                    className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
-                                >
-                                    + Nuevo Restaurante
-                                </Link>
-                            )}
-                        </div>
+                        <Link to="/" className="text-blue-600 hover:text-blue-800">
+                            ← Volver al inicio
+                        </Link>
                     </div>
 
                     {/* Tabs */}
-                    <div className="flex space-x-8 border-b">
+                    <div className="border-b border-gray-200">
                         {getAvailableTabs().map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                                className={`py-2 px-4 border-b-2 font-medium text-sm ${
                                     activeTab === tab.id
                                         ? 'border-blue-500 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -229,13 +247,18 @@ function PortalPage({ userData, isLoggedIn }) {
     );
 }
 
-// 🔥 COMPONENTE OVERVIEW ACTUALIZADO
+// ✅ COMPONENTE OVERVIEW CON VALIDACIÓN DE ARRAYS
 function OverviewTab({ hotels, businesses, bookings, userRole }) {
-    const totalHotels = hotels.length;
-    const totalBusinesses = businesses.length;
-    const totalBookings = bookings.length;
-    const pendingHotels = hotels.filter(h => h.status === 'pending').length;
-    const pendingBusinesses = businesses.filter(b => b.status === 'pending').length;
+    // ✅ ASEGURAR QUE TODOS SON ARRAYS ANTES DE USAR .filter()
+    const safeHotels = Array.isArray(hotels) ? hotels : [];
+    const safeBusinesses = Array.isArray(businesses) ? businesses : [];
+    const safeBookings = Array.isArray(bookings) ? bookings : [];
+
+    const totalHotels = safeHotels.length;
+    const totalBusinesses = safeBusinesses.length;
+    const totalBookings = safeBookings.length;
+    const pendingHotels = safeHotels.filter(h => h.status === 'pending').length;
+    const pendingBusinesses = safeBusinesses.filter(b => b.status === 'pending').length;
 
     return (
         <div className="space-y-6">
@@ -251,119 +274,74 @@ function OverviewTab({ hotels, businesses, bookings, userRole }) {
                 {(userRole === 'BusinessOwner' || userRole === 'Admin') && (
                     <>
                         <MetricCard title="Total Restaurantes" value={totalBusinesses} color="red" />
-                        <MetricCard title="Restaurantes Pendientes" value={pendingBusinesses} color="orange" />
+                        <MetricCard title="Restaurantes Pendientes" value={pendingBusinesses} color="yellow" />
                     </>
                 )}
                 
                 <MetricCard title="Total Reservas" value={totalBookings} color="green" />
             </div>
 
-            {/* Estado de aprobación */}
+            {/* Actividad Reciente */}
             <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Estado de Aprobación</h3>
+                <h3 className="text-lg font-semibold mb-4">Actividad Reciente</h3>
                 
-                {userRole === 'HotelOwner' && hotels.length === 0 && (
+                {totalHotels === 0 && totalBusinesses === 0 && totalBookings === 0 ? (
                     <div className="text-center py-8">
-                        <p className="text-gray-500 mb-4">No tienes hoteles registrados</p>
-                        <Link
-                            to="/portal/nuevo-hotel"
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                        >
-                            Registrar Primer Hotel
-                        </Link>
-                    </div>
-                )}
-
-                {userRole === 'BusinessOwner' && businesses.length === 0 && (
-                    <div className="text-center py-8">
-                        <p className="text-gray-500 mb-4">No tienes restaurantes registrados</p>
-                        <Link
-                            to="/registro-restaurante"
-                            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
-                        >
-                            Registrar Primer Restaurante
-                        </Link>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-// 🔥 NUEVO COMPONENTE PARA PESTAÑA DE RESTAURANTES
-function BusinessesTab({ businesses }) {
-    if (businesses.length === 0) {
-        return (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-                <h3 className="text-xl font-semibold mb-4">No tienes restaurantes registrados</h3>
-                <p className="text-gray-600 mb-6">Registra tu primer restaurante para comenzar</p>
-                <Link
-                    to="/registro-restaurante"
-                    className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
-                >
-                    + Registrar Restaurante
-                </Link>
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Mis Restaurantes</h2>
-                <Link
-                    to="/registro-restaurante"
-                    className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
-                >
-                    + Nuevo Restaurante
-                </Link>
-            </div>
-
-            <div className="grid gap-6">
-                {businesses.map((business) => (
-                    <div key={business.id} className="bg-white rounded-lg shadow p-6">
-                        <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                                <h3 className="text-xl font-semibold mb-2">{business.name}</h3>
-                                <p className="text-gray-600 mb-2">{business.description}</p>
-                                <p className="text-sm text-gray-500">
-                                    📍 {business.location} • {business.address}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                    📞 {business.phone} • ✉️ {business.email}
-                                </p>
-                            </div>
-                            
-                            <div className="flex flex-col items-end space-y-2">
-                                <StatusBadge status={business.status} />
-                                <div className="flex space-x-2">
-                                    <Link
-                                        to={`/businesses/${business.id}/edit`}
-                                        className="text-blue-600 hover:text-blue-800 text-sm"
-                                    >
-                                        Editar
-                                    </Link>
-                                </div>
-                            </div>
+                        <p className="text-gray-500 mb-4">No tienes actividad reciente</p>
+                        <div className="space-x-4">
+                            {(userRole === 'HotelOwner' || userRole === 'Admin') && (
+                                <Link
+                                    to="/portal/nuevo-hotel"
+                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                >
+                                    Registrar Hotel
+                                </Link>
+                            )}
+                            {(userRole === 'BusinessOwner' || userRole === 'Admin') && (
+                                <Link
+                                    to="/registrar-restaurante"
+                                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                                >
+                                    Registrar Restaurante
+                                </Link>
+                            )}
                         </div>
-                        
-                        {business.status === 'pending' && (
-                            <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
-                                <p className="text-yellow-800 text-sm">
-                                    ⏳ Tu restaurante está pendiente de aprobación por el administrador
-                                </p>
-                            </div>
-                        )}
                     </div>
-                ))}
+                ) : (
+                    <div className="space-y-4">
+                        {/* Mostrar hoteles recientes */}
+                        {safeHotels.slice(0, 3).map((hotel) => (
+                            <div key={hotel.id} className="flex items-center justify-between border-b pb-4">
+                                <div>
+                                    <h4 className="font-medium">{hotel.name}</h4>
+                                    <p className="text-sm text-gray-500">{hotel.location}</p>
+                                </div>
+                                <StatusBadge status={hotel.status} />
+                            </div>
+                        ))}
+                        
+                        {/* Mostrar negocios recientes */}
+                        {safeBusinesses.slice(0, 3).map((business) => (
+                            <div key={business.id} className="flex items-center justify-between border-b pb-4">
+                                <div>
+                                    <h4 className="font-medium">{business.name}</h4>
+                                    <p className="text-sm text-gray-500">{business.location}</p>
+                                </div>
+                                <StatusBadge status={business.status} />
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
 }
 
-// Componentes existentes
+// ✅ COMPONENTE HOTELTAB CON VALIDACIÓN
 function HotelsTab({ hotels }) {
-    if (hotels.length === 0) {
+    const safeHotels = Array.isArray(hotels) ? hotels : [];
+    
+    if (safeHotels.length === 0) {
         return (
             <div className="bg-white rounded-lg shadow p-8 text-center">
                 <h3 className="text-xl font-semibold mb-4">No tienes hoteles registrados</h3>
@@ -391,7 +369,7 @@ function HotelsTab({ hotels }) {
             </div>
 
             <div className="grid gap-6">
-                {hotels.map((hotel) => (
+                {safeHotels.map((hotel) => (
                     <div key={hotel.id} className="bg-white rounded-lg shadow p-6">
                         <div className="flex justify-between items-start">
                             <div className="flex-1">
@@ -432,8 +410,73 @@ function HotelsTab({ hotels }) {
     );
 }
 
+// ✅ COMPONENTE BUSINESSESTAB CON VALIDACIÓN
+function BusinessesTab({ businesses }) {
+    const safeBusinesses = Array.isArray(businesses) ? businesses : [];
+    
+    if (safeBusinesses.length === 0) {
+        return (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+                <h3 className="text-xl font-semibold mb-4">No tienes restaurantes registrados</h3>
+                <p className="text-gray-600 mb-6">Registra tu primer restaurante para comenzar</p>
+                <Link
+                    to="/registrar-restaurante"
+                    className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                    + Registrar Restaurante
+                </Link>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Mis Restaurantes</h2>
+                <Link
+                    to="/registrar-restaurante"
+                    className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                    + Nuevo Restaurante
+                </Link>
+            </div>
+
+            <div className="grid gap-6">
+                {safeBusinesses.map((business) => (
+                    <div key={business.id} className="bg-white rounded-lg shadow p-6">
+                        <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                                <h3 className="text-xl font-semibold mb-2">{business.name}</h3>
+                                <p className="text-gray-600 mb-2">{business.description}</p>
+                                <p className="text-sm text-gray-500">
+                                    📍 {business.location} • {business.address}
+                                </p>
+                            </div>
+                            
+                            <div className="flex flex-col items-end space-y-2">
+                                <StatusBadge status={business.status} />
+                            </div>
+                        </div>
+                        
+                        {business.status === 'pending' && (
+                            <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                                <p className="text-yellow-800 text-sm">
+                                    ⏳ Tu restaurante está pendiente de aprobación por el administrador
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ✅ COMPONENTE BOOKINGSTAB CON VALIDACIÓN
 function BookingsTab({ bookings }) {
-    if (bookings.length === 0) {
+    const safeBookings = Array.isArray(bookings) ? bookings : [];
+    
+    if (safeBookings.length === 0) {
         return (
             <div className="bg-white rounded-lg shadow p-8 text-center">
                 <h3 className="text-xl font-semibold mb-4">No tienes reservas</h3>
@@ -451,37 +494,43 @@ function BookingsTab({ bookings }) {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                     Cliente
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                     Servicio
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Fecha
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Fechas
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Monto
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Total
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                     Estado
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {bookings.map((booking) => (
+                            {safeBookings.map((booking) => (
                                 <tr key={booking.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {booking.customer_name || booking.customer_email}
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900">
+                                            {booking.customer_name || 'Cliente'}
+                                        </div>
+                                        <div className="text-sm text-gray-500">
+                                            {booking.customer_email}
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {booking.service_name}
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-900">{booking.hotel_name}</div>
+                                        <div className="text-sm text-gray-500">{booking.hotel_location}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {new Date(booking.booking_date).toLocaleDateString()}
+                                        {booking.check_in} - {booking.check_out}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${booking.total_amount} MXN
+                                        ${booking.total_price}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <StatusBadge status={booking.status} />
@@ -496,52 +545,35 @@ function BookingsTab({ bookings }) {
     );
 }
 
-// Componente para métricas
-function MetricCard({ title, value, color = "blue" }) {
+// ✅ COMPONENTES AUXILIARES
+function MetricCard({ title, value, color }) {
     const colorClasses = {
-        blue: "border-blue-500 text-blue-600",
-        green: "border-green-500 text-green-600",
-        red: "border-red-500 text-red-600",
-        yellow: "border-yellow-500 text-yellow-600",
-        orange: "border-orange-500 text-orange-600"
+        blue: 'bg-blue-50 text-blue-700',
+        yellow: 'bg-yellow-50 text-yellow-700',
+        red: 'bg-red-50 text-red-700',
+        green: 'bg-green-50 text-green-700',
     };
 
     return (
-        <div className={`bg-white rounded-lg shadow p-6 border-l-4 ${colorClasses[color]}`}>
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                {title}
-            </h3>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-                {value}
-            </p>
+        <div className={`${colorClasses[color]} p-6 rounded-lg`}>
+            <h3 className="text-sm font-medium">{title}</h3>
+            <p className="text-2xl font-bold mt-2">{value}</p>
         </div>
     );
 }
 
-// Componente para badges de estado
 function StatusBadge({ status }) {
-    const getStatusConfig = (status) => {
-        switch (status) {
-            case 'approved':
-                return { text: 'Aprobado', className: 'bg-green-100 text-green-800' };
-            case 'pending':
-                return { text: 'Pendiente', className: 'bg-yellow-100 text-yellow-800' };
-            case 'rejected':
-                return { text: 'Rechazado', className: 'bg-red-100 text-red-800' };
-            case 'confirmed':
-                return { text: 'Confirmada', className: 'bg-green-100 text-green-800' };
-            case 'cancelled':
-                return { text: 'Cancelada', className: 'bg-red-100 text-red-800' };
-            default:
-                return { text: status, className: 'bg-gray-100 text-gray-800' };
-        }
+    const statusConfig = {
+        pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pendiente' },
+        approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Aprobado' },
+        rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rechazado' },
     };
 
-    const config = getStatusConfig(status);
-    
+    const config = statusConfig[status] || statusConfig.pending;
+
     return (
-        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${config.className}`}>
-            {config.text}
+        <span className={`${config.bg} ${config.text} px-2 py-1 rounded-full text-xs font-medium`}>
+            {config.label}
         </span>
     );
 }

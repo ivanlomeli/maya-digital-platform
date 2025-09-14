@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE businesses \n        SET name = $1, description = $2, location = $3, address = $4,\n            phone = $5, email = $6, website = $7, business_data = $8,\n            operating_hours = $9, updated_at = NOW()\n        WHERE id = $10 AND owner_id = $11\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Jsonb",
+        "Jsonb",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bc17d5833b4c1fa987751fa0881787578201c8e3373c07e951d1404720e94d1b"
+}

@@ -1,0 +1,147 @@
+[ 384]  .
+├── [8.0K]  .DS_Store
+├── [ 297]  .gitignore
+├── [ 320]  _audit
+│   ├── [6.0K]  .DS_Store
+│   ├── [  96]  20250913_132733
+│   │   └── [4.0K]  tree.txt
+│   ├── [  96]  20250913_132739
+│   │   └── [4.1K]  tree.txt
+│   ├── [  96]  20250913_133043
+│   │   └── [4.1K]  tree.txt
+│   ├── [  96]  20250913_143133
+│   │   └── [3.9K]  tree.txt
+│   ├── [  96]  20250913_144506
+│   │   └── [286K]  tree.txt
+│   ├── [ 256]  20250913_145740
+│   │   ├── [  31]  FILES_FULL.csv
+│   │   ├── [ 81K]  FILES_SHA1.csv
+│   │   ├── [286K]  LIST_FULL.txt
+│   │   ├── [ 334]  STRUCTURE.md
+│   │   ├── [ 324]  SUMMARY.md
+│   │   └── [279K]  TREE_FULL.txt
+│   └── [ 320]  20250913_152237
+│       ├── [  69]  counts.txt
+│       ├── [2.0K]  duplicate_names.txt
+│       ├── [286K]  empty_dirs.txt
+│       ├── [  59]  files.csv
+│       ├── [ 606]  git_status.txt
+│       ├── [287K]  large_files.txt
+│       ├── [4.1K]  tree.txt
+│       └── [ 684]  tree_L2.txt
+├── [ 352]  backend
+│   ├── [6.0K]  .DS_Store
+│   ├── [   8]  .gitignore
+│   ├── [ 90K]  Cargo.lock
+│   ├── [ 942]  Cargo.toml
+│   ├── [ 798]  Dockerfile
+│   ├── [7.7K]  create_test_hotel.sh
+│   ├── [ 384]  migrations
+│   │   ├── [6.0K]  .DS_Store
+│   │   ├── [ 930]  20250703105003_create_initial_tables.sql
+│   │   ├── [ 783]  20250715131035_create_users_table.sql
+│   │   ├── [1.1K]  20250715131209_create_hotels_table.sql
+│   │   ├── [1.2K]  20250715134134_fix_enum_types_properly.sql
+│   │   ├── [2.6K]  20250715150000_create_bookings_table.sql
+│   │   ├── [1.7K]  20250716170000_create_businesses.sql
+│   │   ├── [2.1K]  business_migration_text.sql
+│   │   ├── [1.9K]  business_tables_migration.sql
+│   │   └── [2.3K]  seed.sql
+│   └── [ 256]  src
+│       ├── [6.0K]  .DS_Store
+│       ├── [ 288]  handlers
+│       │   ├── [ 21K]  admin.rs
+│       │   ├── [8.1K]  auth.rs
+│       │   ├── [8.5K]  booking.rs
+│       │   ├── [ 10K]  business.rs
+│       │   ├── [9.9K]  hotel.rs
+│       │   ├── [ 712]  mod.rs
+│       │   └── [ 208]  test_business.rs
+│       ├── [ 10K]  main.rs
+│       ├── [ 128]  middleware
+│       │   ├── [3.4K]  auth.rs
+│       │   └── [  15]  mod.rs
+│       ├── [ 224]  models
+│       │   ├── [1.8K]  booking.rs
+│       │   ├── [4.3K]  business.rs
+│       │   ├── [1.6K]  hotel.rs
+│       │   ├── [ 236]  mod.rs
+│       │   └── [1.3K]  user.rs
+│       └── [ 128]  utils
+│           ├── [1.4K]  jwt.rs
+│           └── [  29]  mod.rs
+├── [1.0K]  docker-compose.yml
+├── [ 160]  docs
+│   ├── [  97]  analysis_output.txt
+│   ├── [5.7K]  detailed_info.txt
+│   └── [1.8K]  info.txt
+├── [ 384]  frontend
+│   ├── [6.0K]  .DS_Store
+│   ├── [ 310]  .gitignore
+│   ├── [ 856]  Dockerfile
+│   ├── [3.3K]  README.md
+│   ├── [674K]  package-lock.json
+│   ├── [1.1K]  package.json
+│   ├── [  83]  postcss.config.js
+│   ├── [ 256]  public
+│   │   ├── [3.8K]  favicon.ico
+│   │   ├── [1.7K]  index.html
+│   │   ├── [5.2K]  logo192.png
+│   │   ├── [9.4K]  logo512.png
+│   │   ├── [ 492]  manifest.json
+│   │   └── [  67]  robots.txt
+│   ├── [ 416]  src
+│   │   ├── [6.0K]  .DS_Store
+│   │   ├── [ 14K]  App.js
+│   │   ├── [ 246]  App.test.js
+│   │   ├── [ 320]  assets
+│   │   │   ├── [245K]  Imagotipo-Maya-Digital-2022.png
+│   │   │   ├── [553K]  aretes-1.jpg
+│   │   │   ├── [ 96K]  hero-background.jpg
+│   │   │   ├── [663K]  huipil-1.jpg
+│   │   │   ├── [ 65K]  huipil-2.jpg
+│   │   │   ├── [250K]  huipil-3.jpg
+│   │   │   ├── [ 55K]  vasija-1.jpg
+│   │   │   └── [5.5K]  vasija-2.jpg
+│   │   ├── [ 544]  components
+│   │   │   ├── [2.1K]  CaballosBookingForm.js
+│   │   │   ├── [1.9K]  CartModal.js
+│   │   │   ├── [2.2K]  CenoteBookingForm.js
+│   │   │   ├── [ 19K]  Header.js
+│   │   │   ├── [ 12K]  HotelBookingForm.js
+│   │   │   ├── [4.1K]  HotelOwnerBanner.js
+│   │   │   ├── [2.1K]  IntroAnimation.js
+│   │   │   ├── [ 902]  Modal.js
+│   │   │   ├── [3.5K]  PredictiveSearch.js
+│   │   │   ├── [2.4K]  ProductDetailModal.js
+│   │   │   ├── [7.2K]  RegistrationModal.js
+│   │   │   ├── [3.1K]  RestaurantMenu.js
+│   │   │   ├── [4.3K]  RestaurantOwnerBanner.js
+│   │   │   ├── [3.1K]  TourBookingForm.js
+│   │   │   └── [1.1K]  TransporteModal.js
+│   │   ├── [2.1K]  index.css
+│   │   ├── [ 413]  index.js
+│   │   ├── [2.6K]  logo.svg
+│   │   ├── [ 544]  pages
+│   │   │   ├── [ 28K]  AdminPage.js
+│   │   │   ├── [2.9K]  ArtesanosPage.js
+│   │   │   ├── [5.2K]  CreateHotelPage.js
+│   │   │   ├── [ 12K]  EditHotelPage.js
+│   │   │   ├── [1.9K]  ExperienciasPage.js
+│   │   │   ├── [ 19K]  HotelLandingPage.js
+│   │   │   ├── [ 29K]  HotelRegistrationPage.js
+│   │   │   ├── [ 10K]  HotelesPage.js
+│   │   │   ├── [ 11K]  MisReservasPage.js
+│   │   │   ├── [ 23K]  PortalPage.js
+│   │   │   ├── [2.6K]  ProductDetailPage.js
+│   │   │   ├── [ 24K]  RestaurantLandingPage.js
+│   │   │   ├── [ 44K]  RestaurantRegistrationPage.js
+│   │   │   ├── [1.8K]  RestaurantesPage.js
+│   │   │   └── [1.4K]  TransportePage.js
+│   │   ├── [ 362]  reportWebVitals.js
+│   │   └── [ 241]  setupTests.js
+│   └── [ 310]  tailwind.config.js
+├── [   0]  project_structure.txt
+└── [ 264]  touch
+
+23 directories, 122 files

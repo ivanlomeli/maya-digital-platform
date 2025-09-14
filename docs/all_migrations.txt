@@ -1,0 +1,365 @@
+-- Add migration script here
+-- migrations/{timestamp}_create_initial_tables.sql
+
+-- Tabla para las reglas de precios
+CREATE TABLE pricing_rules (
+    id SERIAL PRIMARY KEY,
+    rule_name VARCHAR(50) NOT NULL UNIQUE,
+    value DECIMAL(10, 2) NOT NULL,
+    description TEXT
+);
+
+-- Tabla para las configuraciones de la plataforma
+CREATE TABLE platform_settings (
+    id SERIAL PRIMARY KEY,
+    setting_name VARCHAR(50) NOT NULL UNIQUE,
+    setting_value VARCHAR(255) NOT NULL
+);
+
+-- Insertar algunas reglas y configuraciones iniciales
+INSERT INTO pricing_rules (rule_name, value, description) VALUES
+    ('BASE_FARE_MXN', 25.00, 'Tarifa de inicio de cada viaje'),
+    ('PER_KM_RATE_MXN', 8.50, 'Costo por cada kilómetro recorrido'),
+    ('PER_MINUTE_RATE_MXN', 2.50, 'Costo por cada minuto de viaje');
+
+INSERT INTO platform_settings (setting_name, setting_value) VALUES
+    ('PLATFORM_COMMISSION_RATE', '0.20'); -- 20% de comisión-- Add migration script here
+-- migrations/XXXXX_create_users_table.sql
+CREATE TYPE user_role AS ENUM ('admin', 'hotel_owner', 'customer');
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role user_role NOT NULL DEFAULT 'customer',
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    verified BOOLEAN DEFAULT FALSE,
+    verification_token VARCHAR(255),
+    reset_password_token VARCHAR(255)
+);
+
+-- Índices para performance
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_role ON users(role);-- migrations/create_hotels_table.sql
+CREATE TYPE hotel_status AS ENUM ('pending', 'approved', 'rejected');
+
+CREATE TABLE hotels (
+    id SERIAL PRIMARY KEY,
+    owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    location VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    image_url VARCHAR(500),
+    status hotel_status NOT NULL DEFAULT 'pending',
+    admin_notes TEXT,
+    approved_by INTEGER REFERENCES users(id),
+    approved_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Campos adicionales
+    phone VARCHAR(20),
+    email VARCHAR(255),
+    website VARCHAR(255),
+    check_in_time TIME DEFAULT '15:00',
+    check_out_time TIME DEFAULT '11:00',
+    rooms_available INTEGER DEFAULT 1,
+    rating DECIMAL(2,1) DEFAULT 0.0
+);
+
+-- Índices
+CREATE INDEX idx_hotels_owner ON hotels(owner_id);
+CREATE INDEX idx_hotels_status ON hotels(status);
+CREATE INDEX idx_hotels_location ON hotels(location);-- Primero, agregar columnas temporales con tipo TEXT
+ALTER TABLE users ADD COLUMN role_temp TEXT;
+ALTER TABLE hotels ADD COLUMN status_temp TEXT;
+
+-- Copiar datos convirtiendo el enum a texto
+UPDATE users SET role_temp = role::text;
+UPDATE hotels SET status_temp = status::text;
+
+-- Eliminar las columnas originales
+ALTER TABLE users DROP COLUMN role;
+ALTER TABLE hotels DROP COLUMN status;
+
+-- Renombrar las columnas temporales
+ALTER TABLE users RENAME COLUMN role_temp TO role;
+ALTER TABLE hotels RENAME COLUMN status_temp TO status;
+
+-- Agregar restricciones para mantener la integridad
+ALTER TABLE users ADD CONSTRAINT users_role_check 
+    CHECK (role IN ('admin', 'hotel_owner', 'customer'));
+
+ALTER TABLE hotels ADD CONSTRAINT hotels_status_check 
+    CHECK (status IN ('pending', 'approved', 'rejected'));
+
+-- Establecer valores por defecto
+ALTER TABLE users ALTER COLUMN role SET DEFAULT 'customer';
+ALTER TABLE hotels ALTER COLUMN status SET DEFAULT 'pending';
+
+-- Hacer las columnas NOT NULL
+ALTER TABLE users ALTER COLUMN role SET NOT NULL;
+ALTER TABLE hotels ALTER COLUMN status SET NOT NULL;
+
+-- Eliminar los tipos enum ahora que no se usan
+DROP TYPE user_role;
+DROP TYPE hotel_status;-- migrations/20250715150000_create_bookings_table.sql
+
+CREATE TABLE bookings (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    hotel_id INTEGER NOT NULL REFERENCES hotels(id) ON DELETE CASCADE,
+    check_in DATE NOT NULL,
+    check_out DATE NOT NULL,
+    guests INTEGER NOT NULL DEFAULT 1,
+    rooms INTEGER NOT NULL DEFAULT 1,
+    total_price DECIMAL(10,2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    special_requests TEXT,
+    addon_services JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    cancelled_at TIMESTAMP WITH TIME ZONE,
+    cancellation_reason TEXT,
+    booking_reference VARCHAR(20) UNIQUE NOT NULL
+);
+
+-- Índices para performance
+CREATE INDEX idx_bookings_user ON bookings(user_id);
+CREATE INDEX idx_bookings_hotel ON bookings(hotel_id);
+CREATE INDEX idx_bookings_dates ON bookings(check_in, check_out);
+CREATE INDEX idx_bookings_status ON bookings(status);
+CREATE INDEX idx_bookings_reference ON bookings(booking_reference);
+
+-- Restricciones
+ALTER TABLE bookings ADD CONSTRAINT bookings_status_check 
+    CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed'));
+
+ALTER TABLE bookings ADD CONSTRAINT bookings_payment_status_check 
+    CHECK (payment_status IN ('pending', 'paid', 'refunded', 'failed'));
+
+ALTER TABLE bookings ADD CONSTRAINT bookings_dates_check 
+    CHECK (check_out > check_in);
+
+ALTER TABLE bookings ADD CONSTRAINT bookings_guests_check 
+    CHECK (guests >= 1 AND guests <= 10);
+
+ALTER TABLE bookings ADD CONSTRAINT bookings_rooms_check 
+    CHECK (rooms >= 1 AND rooms <= 5);
+
+-- Función para generar referencia única
+CREATE OR REPLACE FUNCTION generate_booking_reference()
+RETURNS TEXT AS $$
+BEGIN
+    RETURN 'MY' || LPAD(FLOOR(RANDOM() * 1000000)::TEXT, 6, '0');
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para generar referencia automáticamente
+CREATE OR REPLACE FUNCTION set_booking_reference()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.booking_reference IS NULL OR NEW.booking_reference = '' THEN
+        NEW.booking_reference := generate_booking_reference();
+        -- Verificar que no exista ya
+        WHILE EXISTS (SELECT 1 FROM bookings WHERE booking_reference = NEW.booking_reference) LOOP
+            NEW.booking_reference := generate_booking_reference();
+        END LOOP;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_booking_reference
+    BEFORE INSERT ON bookings
+    FOR EACH ROW
+    EXECUTE FUNCTION set_booking_reference();-- Crear tabla businesses sin datos de ejemplo
+CREATE TABLE businesses (
+    id SERIAL PRIMARY KEY,
+    owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    business_type VARCHAR(50) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    location VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    phone VARCHAR(20),
+    email VARCHAR(255),
+    website VARCHAR(255),
+    status TEXT NOT NULL DEFAULT 'pending',
+    business_data JSONB NOT NULL DEFAULT '{}',
+    operating_hours JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    approved_at TIMESTAMP WITH TIME ZONE,
+    approved_by INTEGER REFERENCES users(id)
+);
+
+CREATE TABLE business_images (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    image_type VARCHAR(50) NOT NULL,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE businesses ADD CONSTRAINT businesses_status_check 
+    CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'suspended'::text]));
+
+CREATE INDEX idx_businesses_owner_id ON businesses(owner_id);
+CREATE INDEX idx_businesses_status ON businesses(status);
+CREATE INDEX idx_businesses_business_type ON businesses(business_type);
+CREATE INDEX idx_businesses_location ON businesses(location);
+CREATE INDEX idx_business_images_business_id ON business_images(business_id);
+
+-- Permitir business_owner como rol
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check 
+    CHECK (role IN ('admin', 'hotel_owner', 'customer', 'business_owner'));
+-- business_migration_text.sql
+-- Migración para crear las tablas de negocios (adaptada para usar TEXT en lugar de ENUM)
+
+-- Tabla principal de negocios
+CREATE TABLE businesses (
+    id SERIAL PRIMARY KEY,
+    owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    business_type VARCHAR(50) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    location VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    phone VARCHAR(20),
+    email VARCHAR(255),
+    website VARCHAR(255),
+    status TEXT NOT NULL DEFAULT 'pending',
+    business_data JSONB NOT NULL DEFAULT '{}',
+    operating_hours JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    approved_at TIMESTAMP WITH TIME ZONE,
+    approved_by INTEGER REFERENCES users(id)
+);
+
+-- Tabla de imágenes de negocios
+CREATE TABLE business_images (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    image_type VARCHAR(50) NOT NULL,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Agregar constraint para status
+ALTER TABLE businesses ADD CONSTRAINT businesses_status_check 
+    CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'suspended'::text]));
+
+-- Índices para optimizar consultas
+CREATE INDEX idx_businesses_owner_id ON businesses(owner_id);
+CREATE INDEX idx_businesses_status ON businesses(status);
+CREATE INDEX idx_businesses_business_type ON businesses(business_type);
+CREATE INDEX idx_businesses_location ON businesses(location);
+CREATE INDEX idx_business_images_business_id ON business_images(business_id);
+
+-- Trigger para actualizar updated_at automáticamente
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_businesses_updated_at
+    BEFORE UPDATE ON businesses
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Mostrar resumen de lo creado
+SELECT 'Migración completada exitosamente' AS mensaje;
+-- business_tables_migration.sql
+-- Migración para crear las tablas de negocios (restaurants y otros)
+
+-- Tabla principal de negocios
+CREATE TABLE IF NOT EXISTS businesses (
+    id SERIAL PRIMARY KEY,
+    owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    business_type VARCHAR(50) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    location VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    phone VARCHAR(20),
+    email VARCHAR(255),
+    website VARCHAR(255),
+    status TEXT NOT NULL DEFAULT 'pending',
+    business_data JSONB NOT NULL DEFAULT '{}',
+    operating_hours JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    approved_at TIMESTAMP WITH TIME ZONE,
+    approved_by INTEGER REFERENCES users(id)
+);
+
+-- Tabla de imágenes de negocios
+CREATE TABLE IF NOT EXISTS business_images (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    image_type VARCHAR(50) NOT NULL,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Constraint para status
+ALTER TABLE businesses DROP CONSTRAINT IF EXISTS businesses_status_check;
+ALTER TABLE businesses ADD CONSTRAINT businesses_status_check 
+    CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'suspended'::text]));
+
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_businesses_owner_id ON businesses(owner_id);
+CREATE INDEX IF NOT EXISTS idx_businesses_status ON businesses(status);
+CREATE INDEX IF NOT EXISTS idx_businesses_business_type ON businesses(business_type);
+CREATE INDEX IF NOT EXISTS idx_businesses_location ON businesses(location);
+CREATE INDEX IF NOT EXISTS idx_business_images_business_id ON business_images(business_id);
+
+SELECT 'Tablas de businesses creadas correctamente' AS status;
+-- Archivo de Inicialización (Seed) para la Base de Datos de Maya Digital
+TRUNCATE TABLE users, hotels, restaurants, menu_items, b2b_services, b2b_leads RESTART IDENTITY CASCADE;
+
+INSERT INTO users (id, name, email, password_hash, user_type) VALUES
+(1, 'Admin Maya Digital', 'admin@mayadigital.com', 'hash_falso_admin', 'admin'),
+(2, 'Carlos Puc', 'carlos.puc@hotelbalam.com', 'passwordsegura', 'owner'),
+(3, 'Ana Chi', 'ana.chi@lacoctelera.com', 'passwordsegura', 'owner')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO hotels (id, owner_id, name, location, image_url, price_per_night, status) VALUES
+(1, 2, 'Hotel Balam Kú', 'Tulum, Quintana Roo', '/uploads/hotel_tulum.jpg', 2850, 'Approved'),
+(2, 3, 'Hacienda Kaan', 'Valladolid, Yucatán', '/uploads/hotel_hacienda.jpg', 4200, 'Approved'),
+(3, 2, 'Cabañas Zazil-Ha', 'Isla Mujeres, Quintana Roo', '/uploads/hotel_cabanas.jpg', 1900, 'Pending')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO restaurants (id, owner_id, name, location, specialty, image_url, status) VALUES
+(1, 3, 'La Coctelera del Caribe', 'Playa del Carmen', 'Mariscos y Pescado Fresco', '/uploads/rest_mariscos.jpg', 'Approved'),
+(2, 2, 'El Rincón del Maíz', 'Mérida, Yucatán', 'Cocina Yucateca Tradicional', '/uploads/rest_yucateco.jpg', 'Pending')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO menu_items (restaurant_id, name, description, price, category) VALUES
+(1, 'Ceviche Mixto', 'Pescado fresco, camarón y pulpo marinado en cítricos.', 220.00, 'Entradas'),
+(1, 'Tacos de Pescado estilo Baja', 'Tres tacos de pescado rebozado con col y salsa de chipotle.', 180.00, 'Plato Fuerte'),
+(2, 'Sopa de Lima', 'Caldo de pavo ligero con un toque de lima y tiras de tortilla frita.', 110.00, 'Entradas'),
+(2, 'Cochinita Pibil', 'Carne de cerdo marinada en achiote, cocida lentamente.', 250.00, 'Plato Fuerte');
+
+INSERT INTO b2b_services (id, owner_id, title, description, category) VALUES
+(1, 2, 'Servicio de Lavandería Industrial para Hoteles', 'Ofrecemos lavado, secado y planchado de blancos para hoteles en la Riviera Maya.', 'Suministros'),
+(2, 3, 'Tours de Buceo para Huéspedes (Comisión)', 'Asóciate con nosotros y ofrece tours de buceo a tus huéspedes. Ofrecemos 15% de comisión.', 'Tours y Comisiones')
+ON CONFLICT (id) DO NOTHING;
+
+\echo '✅ Base de datos restaurada con datos de prueba.'

@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            COUNT(*) FILTER (WHERE status = 'pending') as pending_count,\n            COUNT(*) FILTER (WHERE status = 'approved') as approved_count,\n            COUNT(*) FILTER (WHERE status = 'rejected') as rejected_count,\n            COUNT(*) as total_count\n        FROM hotels\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pending_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "approved_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "rejected_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "5bf07a358b7c154212a8fe891724945bcb4486c9d4165cf198ca3251bfdab89c"
+}

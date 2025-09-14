@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO bookings \n        (user_id, hotel_id, check_in, check_out, guests, rooms, total_price, \n         special_requests, addon_services, status, payment_status, booking_reference)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)\n        RETURNING id, created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Date",
+        "Date",
+        "Int4",
+        "Int4",
+        "Numeric",
+        "Text",
+        "Jsonb",
+        "Varchar",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "a60fc9a8a67ebfa5692e82b7148bea67a6275f539cb9233fbe8208ef5a1bbbb3"
+}

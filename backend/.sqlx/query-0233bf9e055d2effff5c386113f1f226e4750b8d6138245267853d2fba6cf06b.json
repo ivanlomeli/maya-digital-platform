@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM hotels WHERE id = $1 AND (status = 'pending' OR status = 'rejected')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0233bf9e055d2effff5c386113f1f226e4750b8d6138245267853d2fba6cf06b"
+}

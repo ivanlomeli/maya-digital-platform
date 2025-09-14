@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT b.id, b.check_in, b.check_out, b.guests, b.rooms, \n               b.total_price::text as total_price_text, b.status, b.payment_status,\n               b.special_requests, b.addon_services, b.created_at, b.booking_reference,\n               h.name as hotel_name, h.location as hotel_location, h.address as hotel_address\n        FROM bookings b\n        JOIN hotels h ON b.hotel_id = h.id\n        WHERE b.user_id = $1\n        ORDER BY b.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "check_in",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 2,
+        "name": "check_out",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 3,
+        "name": "guests",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "rooms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "total_price_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "status",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "payment_status",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "special_requests",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "addon_services",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "booking_reference",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "hotel_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 13,
+        "name": "hotel_location",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 14,
+        "name": "hotel_address",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "25e7049bc53b596960ddadce2f52848d82b75a7bb9f39e4deb94e23a4ebfc18c"
+}

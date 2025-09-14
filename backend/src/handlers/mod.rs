@@ -1,4 +1,4 @@
-// handlers/mod.rs - VERSIÓN COMPLETA
+// handlers/mod.rs - VERSIÓN COMPLETA CON FUNCIÓN 'me'
 
 pub mod auth;
 pub mod hotel;
@@ -6,10 +6,16 @@ pub mod booking;
 pub mod admin;
 pub mod business;
 
-// Re-export all handlers
-pub use auth::*;
+// Re-export all handlers from auth
+pub use auth::{register, login, me}; // ✅ Exportar explícitamente 'me'
+
+// Re-export all handlers from hotel
 pub use hotel::*;
+
+// Re-export all handlers from booking
 pub use booking::*;
+
+// Re-export business handlers
 pub use business::{
     create_business, 
     get_my_businesses, 
@@ -18,7 +24,7 @@ pub use business::{
     delete_business
 };
 
-// 🔥 NUEVOS EXPORTS PARA ADMIN DE NEGOCIOS
+// Re-export admin handlers
 pub use admin::{
     get_admin_stats,
     get_admin_metrics,

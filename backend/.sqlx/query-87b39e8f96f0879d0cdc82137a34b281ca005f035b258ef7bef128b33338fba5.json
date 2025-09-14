@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO business_images (business_id, image_url, image_type, display_order)\n                VALUES ($1, $2, $3, $4)\n                RETURNING id, business_id, image_url, image_type, display_order, created_at\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "business_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "image_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "display_order",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "87b39e8f96f0879d0cdc82137a34b281ca005f035b258ef7bef128b33338fba5"
+}

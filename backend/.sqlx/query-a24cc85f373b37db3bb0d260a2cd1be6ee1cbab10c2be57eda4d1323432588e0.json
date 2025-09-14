@@ -1,0 +1,112 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT h.id, h.name, h.description, h.location, h.address, h.price::text as price_text, \n               h.image_url, h.status, h.created_at, h.phone, h.email, h.website, \n               h.rooms_available, h.rating::text as rating_text, u.first_name, u.last_name\n        FROM hotels h JOIN users u ON h.owner_id = u.id\n        WHERE h.id = $1 AND h.status = 'approved'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "location",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "price_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "image_url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "phone",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "website",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "rooms_available",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "rating_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "first_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 15,
+        "name": "last_name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "a24cc85f373b37db3bb0d260a2cd1be6ee1cbab10c2be57eda4d1323432588e0"
+}

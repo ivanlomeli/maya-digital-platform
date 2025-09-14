@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT h.id, h.name, h.location, h.address, h.price::text as price_text,\n               h.image_url, h.status, h.created_at, h.approved_at, h.admin_notes,\n               u.first_name, u.last_name, u.email as owner_email\n        FROM hotels h\n        JOIN users u ON h.owner_id = u.id\n        ORDER BY h.created_at DESC\n        LIMIT 100\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "location",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "price_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "image_url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "approved_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "admin_notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "first_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "last_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "owner_email",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "7a05f7f12affc64c920e5a2ff447e49bd699dba9298a4b42d450e5eec4363da1"
+}

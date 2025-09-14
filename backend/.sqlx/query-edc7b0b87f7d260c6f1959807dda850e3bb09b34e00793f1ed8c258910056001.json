@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE hotels SET name = $2, description = $3, location = $4, address = $5, price = $6, \n            image_url = $7, phone = $8, email = $9, website = $10, rooms_available = $11, updated_at = CURRENT_TIMESTAMP\n        WHERE id = $1 AND (status = 'pending' OR status = 'rejected')\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Text",
+        "Numeric",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "edc7b0b87f7d260c6f1959807dda850e3bb09b34e00793f1ed8c258910056001"
+}

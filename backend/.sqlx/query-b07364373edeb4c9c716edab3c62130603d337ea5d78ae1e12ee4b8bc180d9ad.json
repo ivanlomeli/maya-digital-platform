@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            COUNT(*) FILTER (WHERE status = 'approved') as approved_hotels,\n            COUNT(*) FILTER (WHERE status = 'pending') as pending_hotels\n        FROM hotels\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "approved_hotels",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "pending_hotels",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "b07364373edeb4c9c716edab3c62130603d337ea5d78ae1e12ee4b8bc180d9ad"
+}

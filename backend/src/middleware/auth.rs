@@ -1,7 +1,6 @@
 use actix_web::{Error, FromRequest, HttpRequest};
 use actix_web::error::ErrorUnauthorized;
 use futures_util::future::{ok, err, Ready};
-use sqlx::PgPool;
 
 use crate::models::{UserInfo, UserRole};
 use crate::utils::verify_jwt;
@@ -21,7 +20,7 @@ impl FromRequest for UserInfo {
                     // Use your existing verify_jwt function
                     match verify_jwt(token) {
                         Ok(claims) => {
-                            // Convert role string to UserRole
+                            // Convert role string to UserRole - FIXED
                             let role = match claims.role.as_str() {
                                 "admin" => UserRole::Admin,
                                 "hotel_owner" => UserRole::HotelOwner,
@@ -39,14 +38,14 @@ impl FromRequest for UserInfo {
                                 }
                             };
                             
-                            // 🔥 SOLUCIÓN: Obtener datos completos del usuario desde la BD
+                            // TODO: Implementar consulta a BD para obtener datos completos
                             // Por ahora, usar los datos básicos del token
                             let user_info = UserInfo {
                                 id: user_id,
                                 email: claims.email,
                                 role,
-                                first_name: "Usuario".to_string(), // Valor por defecto temporal
-                                last_name: "".to_string(),        // Valor por defecto temporal
+                                first_name: "Usuario".to_string(), // Valor temporal hasta implementar consulta
+                                last_name: "".to_string(),        // Valor temporal hasta implementar consulta
                                 phone: None,
                             };
                             

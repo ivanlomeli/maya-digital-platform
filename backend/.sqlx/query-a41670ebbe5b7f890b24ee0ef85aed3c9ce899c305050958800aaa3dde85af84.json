@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE businesses \n        SET status = 'rejected',\n            approved_by = $1,\n            approved_at = NOW(),\n            updated_at = NOW()\n        WHERE id = $2 AND status = 'pending'\n        RETURNING id, name, business_type\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "business_type",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a41670ebbe5b7f890b24ee0ef85aed3c9ce899c305050958800aaa3dde85af84"
+}

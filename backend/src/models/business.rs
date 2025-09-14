@@ -152,3 +152,16 @@ impl From<Business> for BusinessResponse {
         }
     }
 }
+// Agregar al final del archivo
+impl Business {
+    pub fn validate_status(&self) -> Result<(), String> {
+        match self.status.as_str() {
+            "pending" | "approved" | "rejected" | "suspended" => Ok(()),
+            _ => Err(format!("Invalid business status: {}", self.status))
+        }
+    }
+    
+    pub fn is_editable(&self) -> bool {
+        matches!(self.status.as_str(), "pending" | "rejected")
+    }
+}
