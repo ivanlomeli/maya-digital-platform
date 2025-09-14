@@ -1,30 +1,16 @@
-# macOS
-.DS_Store
+# Rust build artifacts
+/target
+Cargo.lock
 
-# Node/Frontend
-node_modules/
-frontend/node_modules/
-frontend/.next/
-frontend/dist/
-frontend/build/
-dist/
-build/
+# Node.js dependencies
+/node_modules
+/build
+/dist
 
-# Python (si aplica)
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-
-# Docker / env
+# Environment variables (NEVER commit secrets)
 .env
-.env.*
-**/.env
-docker-volumes/
-*.sqlite3
+.env.local
+.env.*.local
 
-# Logs / IDE
-*.log
-logs/
-.vscode/
-.idea/
+# macOS specific files
+.DS_Store
